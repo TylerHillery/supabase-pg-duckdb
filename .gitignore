@@ -2,3 +2,5 @@
 volumes/db/data/
 volumes/storage/
 volumes/snippets/
+node_modules/
+data/
