@@ -17,7 +17,7 @@ The guide covers:
 
 This Docker Compose configuration includes the following services:
 
-- **[Studio](https://github.com/supabase/supabase/tree/master/apps/studio)** - A dashboard for managing your self-hosted Supabase project
+- **[Studio](https://github.com/supabase/supabase/tree/master/apps/studio)** - A dashboard for managing your self-hosted Supabase project: http://localhost:8888
 - **[Kong](https://github.com/Kong/kong)** - Kong API gateway
 - **[Auth](https://github.com/supabase/auth)** - JWT-based authentication API for user sign-ups, logins, and session management
 - **[PostgREST](https://github.com/PostgREST/postgrest)** - Web server that turns your PostgreSQL database directly into a RESTful API
@@ -30,6 +30,7 @@ This Docker Compose configuration includes the following services:
 - **[Logflare](https://github.com/Logflare/logflare)** - Log management and event analytics platform
 - **[Vector](https://github.com/vectordotdev/vector)** - High-performance observability data pipeline for logs
 - **[Supavisor](https://github.com/supabase/supavisor)** - Supabase's Postgres connection pooler
+- **[mitmproxy]() - Capture HTTP traffic for debugging purposes http://localhost:8088?token=mitm
 
 ## Documentation
 

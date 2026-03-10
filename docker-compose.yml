@@ -31,11 +31,12 @@ services:
       # Binds nestjs listener to both IPv4 and IPv6 network interfaces
       HOSTNAME: "::"
 
-      STUDIO_PG_META_URL: http://meta:8080
+      STUDIO_PG_META_URL: http://mitmweb:8888/pg
       POSTGRES_PORT: ${POSTGRES_PORT}
       POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_USER_READ_WRITE: postgres
       PG_META_CRYPTO_KEY: ${PG_META_CRYPTO_KEY}
 
       DEFAULT_ORGANIZATION_NAME: ${STUDIO_DEFAULT_ORGANIZATION}
@@ -406,7 +407,7 @@ services:
       PG_META_DB_HOST: ${POSTGRES_HOST}
       PG_META_DB_PORT: ${POSTGRES_PORT}
       PG_META_DB_NAME: ${POSTGRES_DB}
-      PG_META_DB_USER: supabase_admin
+      PG_META_DB_USER: postgres
       PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
       CRYPTO_KEY: ${PG_META_CRYPTO_KEY}
 
@@ -545,7 +546,9 @@ services:
         "-c",
         "log_min_messages=fatal", # prevents Realtime polling queries from appearing in logs
         "-c",
-        "wal_level=logical"
+        "wal_level=logical",
+        "-c",
+        "duckdb.postgres_role=duckdb_role"
       ]
 
   vector:
@@ -631,6 +634,24 @@ services:
         "-c",
         "/app/bin/migrate && /app/bin/supavisor eval \"$$(cat /etc/pooler/pooler.exs)\" && /app/bin/server"
       ]
+
+  mitmweb:
+    container_name: supabase-mitmweb
+    image: mitmproxy/mitmproxy
+    # :8888 → kong:8000      all API traffic
+    # :8889 → storage:5000   S3 direct (bypasses Kong so x-forwarded-port is not injected,
+    #                         allowing AWS Sig V4 host to match what the client signed)
+    command: >
+      mitmweb
+      --web-host 0.0.0.0 --web-port 8088
+      --no-web-open-browser --set web_password=mitm
+      --set keep_host_header=true
+      --mode reverse:http://kong:8000@8888
+      --mode reverse:http://storage:5000@8889
+    ports:
+      - "8088:8088"   # web UI        -> http://localhost:8088?token=mitm
+      - "8888:8888"   # reverse proxy -> kong:8000
+      - "8889:8889"   # S3 direct     -> storage:5000
 
 volumes:
   db-config:
