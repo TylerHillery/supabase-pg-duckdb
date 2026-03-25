@@ -149,17 +149,40 @@ async function seedTaxiTrips(db: DB, s3: S3, serviceClient: SupabaseClient, alic
     console.log(`  DuckDB HTTP proxy set to ${httpProxy}`);
   }
 
+  // await db.pg.unsafe(`
+  //   SELECT duckdb.create_simple_secret(
+  //     type      := 'S3',
+  //     key_id    := '${s3.accessKeyId}',
+  //     secret    := '${s3.secretAccessKey}',
+  //     region    := '${s3.region}',
+  //     endpoint  := '${s3.internalEndpoint}',
+  //     use_ssl   := 'false',
+  //     url_style := 'path',
+  //     scope     := 's3://${BUCKET}/'
+  //   )
+  // `);
+
   await db.pg.unsafe(`
-    SELECT duckdb.create_simple_secret(
-      type      := 'S3',
-      key_id    := '${s3.accessKeyId}',
-      secret    := '${s3.secretAccessKey}',
-      region    := '${s3.region}',
-      endpoint  := '${s3.internalEndpoint}',
-      use_ssl   := 'false',
-      url_style := 'path',
-      scope     := 's3://${BUCKET}/'
+    CREATE SERVER IF NOT EXISTS duckdb_supabase_storage_foreign_server
+    TYPE 's3'
+    FOREIGN DATA WRAPPER duckdb
+    OPTIONS (
+      endpoint  '${s3.internalEndpoint}',
+      region    '${s3.region}',
+      url_style 'path',
+      use_ssl   'false',
+      scope     's3://${BUCKET}/'
     )
+  `);
+
+  await db.pg.unsafe(`
+    CREATE USER MAPPING IF NOT EXISTS FOR postgres SERVER duckdb_supabase_storage_foreign_server
+    OPTIONS (KEY_ID '${s3.accessKeyId}', SECRET '${s3.secretAccessKey}')
+  `);
+
+  await db.pg.unsafe(`
+    CREATE USER MAPPING IF NOT EXISTS FOR service_role SERVER duckdb_supabase_storage_foreign_server
+    OPTIONS (KEY_ID '${s3.accessKeyId}', SECRET '${s3.secretAccessKey}')
   `);
 
   await db.pg.unsafe(`
