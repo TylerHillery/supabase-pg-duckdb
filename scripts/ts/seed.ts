@@ -175,15 +175,13 @@ async function seedTaxiTrips(db: DB, s3: S3, serviceClient: SupabaseClient, alic
     )
   `);
 
-  await db.pg.unsafe(`
-    CREATE USER MAPPING IF NOT EXISTS FOR postgres SERVER duckdb_supabase_storage_foreign_server
-    OPTIONS (KEY_ID '${s3.accessKeyId}', SECRET '${s3.secretAccessKey}')
-  `);
-
-  await db.pg.unsafe(`
-    CREATE USER MAPPING IF NOT EXISTS FOR service_role SERVER duckdb_supabase_storage_foreign_server
-    OPTIONS (KEY_ID '${s3.accessKeyId}', SECRET '${s3.secretAccessKey}')
-  `);
+  const roles = ["supabase_admin", "postgres", "service_role"];
+  for (const role of roles) {
+    await db.pg.unsafe(`
+      CREATE USER MAPPING IF NOT EXISTS FOR ${role} SERVER duckdb_supabase_storage_foreign_server
+      OPTIONS (KEY_ID '${s3.accessKeyId}', SECRET '${s3.secretAccessKey}')
+    `);
+  }
 
   await db.pg.unsafe(`
     CREATE TABLE IF NOT EXISTS public.yellow_taxi_trips AS

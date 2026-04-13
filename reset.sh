@@ -34,10 +34,10 @@ confirm
 echo "===> Stopping and removing all containers..."
 
 if [ -f ".env" ]; then
-    docker compose -f docker-compose.yml -f ./dev/docker-compose.dev.yml down -v --remove-orphans
+    docker compose -f docker-compose.yml down -v --remove-orphans
 elif [ -f ".env.example" ]; then
     echo "No .env found, using .env.example for docker compose down..."
-    docker compose --env-file .env.example -f docker-compose.yml -f ./dev/docker-compose.dev.yml down -v --remove-orphans
+    docker compose --env-file .env.example -f docker-compose.yml down -v --remove-orphanS
 else
     echo "Skipping 'docker compose down' because there's no env-file."
 fi

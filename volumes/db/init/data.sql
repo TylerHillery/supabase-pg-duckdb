@@ -1,4 +1,6 @@
 CREATE EXTENSION pg_duckdb SCHEMA extensions;
+SELECT duckdb.install_extension('ducklake');
+SELECT duckdb.install_extension('postgres');
 
 CREATE TABLE IF NOT EXISTS public.orders (
     id           BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
