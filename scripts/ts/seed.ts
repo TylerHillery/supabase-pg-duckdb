@@ -89,6 +89,7 @@ async function main() {
     const serviceClient = createClient(SUPABASE_PUBLIC_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     console.log("Connected to Supabase at", SUPABASE_PUBLIC_URL);
+    console.log("Connecting to Postgres as 'postgres' user at", DATABASE_URL.replace(/:[^:@]+@/, ":***@"));
 
     // Create test users
     console.log("Creating test users...");
@@ -97,6 +98,8 @@ async function main() {
 
     const bobId = await signUpOrSignIn("bob@test.local", "password123", anonClient);
     console.log(`  Bob:   ${bobId}`);
+
+    await setupDuckDB(db);
 
     const results = await Promise.allSettled([
       seedOrders(db, aliceId, bobId),
@@ -114,6 +117,15 @@ function requireEnv(name: string): string {
   const value = process.env[name];
   if (!value) throw new Error(`Missing required environment variable: ${name}`);
   return value;
+}
+
+async function setupDuckDB(db: DB) {
+  await db.pg.unsafe(`CREATE EXTENSION IF NOT EXISTS pg_duckdb SCHEMA extensions`);
+  console.log("  Extension pg_duckdb ready");
+
+  await db.pg.unsafe(`SELECT duckdb.install_extension('ducklake')`);
+  await db.pg.unsafe(`SELECT duckdb.install_extension('postgres')`);
+  console.log("  DuckDB extensions ducklake + postgres installed");
 }
 
 async function seedOrders(db: DB, aliceId: string, bobId: string) {
